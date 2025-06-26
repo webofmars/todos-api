@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  api:
+    platform: linux/amd64
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: todo-api
+    environment:
+      DB_PATH: /root/data/todos.db
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - api_data:/root/data
+    networks:
+      - todo-network
+    restart: unless-stopped
+
+  frontend:
+    platform: linux/amd64
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: todo-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:8080/api
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - todo-network
+    restart: unless-stopped
+
+volumes:
+  api_data:
+
+networks:
+  todo-network:
+    driver: bridge

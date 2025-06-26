@@ -1,0 +1,22 @@
+# Binaires
+main
+todo-api
+
+# Dépendances
+vendor/
+
+# Logs
+*.log
+
+# Fichiers temporaires
+*.tmp
+*.swp
+*.swo
+
+# Fichiers IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
