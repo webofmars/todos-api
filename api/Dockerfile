@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 golang:1.21-alpine AS builder
+FROM golang:1.21-alpine AS builder
 
 # Installation des dépendances système pour SQLite
 RUN apk add --no-cache git gcc musl-dev sqlite-dev
@@ -14,11 +14,15 @@ RUN go mod download
 # Copie du code source
 COPY . .
 
-# Compilation de l'application avec CGO activé pour SQLite (force AMD64)
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -ldflags '-linkmode external -extldflags "-static"' -o main .
+# Compilation de l'application avec CGO activé pour SQLite
+# Use static linking to avoid runtime issues
+ENV CGO_ENABLED=1
+ENV GOOS=linux
+ENV CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
+RUN go build -a -ldflags '-linkmode external -extldflags "-static"' -o main .
 
-# Image finale (force AMD64)
-FROM --platform=linux/amd64 alpine:latest
+# Image finale
+FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates sqlite
 WORKDIR /root/

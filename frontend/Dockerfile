@@ -1,5 +1,5 @@
-# Stage 1: Build the React application (force AMD64)
-FROM --platform=linux/amd64 node:18-alpine AS build
+# Stage 1: Build the React application
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
@@ -15,8 +15,8 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Stage 2: Serve the application with nginx (force AMD64)
-FROM --platform=linux/amd64 nginx:alpine
+# Stage 2: Serve the application with nginx
+FROM nginx:alpine
 
 # Install gettext for envsubst
 RUN apk add --no-cache gettext
