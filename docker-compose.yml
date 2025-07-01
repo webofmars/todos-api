@@ -3,6 +3,7 @@ version: '3.8'
 services:
   api:
     image: webofmars/todos-api:latest
+    platform: linux/amd64
     build:
       context: ./api
       dockerfile: Dockerfile
@@ -20,6 +21,7 @@ services:
 
   frontend:
     image: webofmars/todos-front:latest
+    platform: linux/amd64
     build:
       context: ./frontend
       dockerfile: Dockerfile
