@@ -129,6 +129,8 @@ func main() {
 
 	// Route de santé
 	r.HandleFunc("/health", healthCheck).Methods("GET")
+	// Route racine - redirige vers health pour les health checks Kubernetes
+	r.HandleFunc("/", healthCheck).Methods("GET")
 
 	// Middleware CORS
 	corsHandler := handlers.CORS(
@@ -140,6 +142,7 @@ func main() {
 	port := getEnv("PORT", "8080")
 	log.Printf("🚀 Serveur démarré sur le port %s", port)
 	log.Printf("📊 Routes disponibles:")
+	log.Printf("   GET    /          (health check)")
 	log.Printf("   GET    /health")
 	log.Printf("   GET    /api/todos")
 	log.Printf("   POST   /api/todos")

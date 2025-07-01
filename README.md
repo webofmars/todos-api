@@ -69,12 +69,13 @@ src/
 
 ## 🔧 API Endpoints
 
+- `GET /` - Health check (équivalent à /health pour Kubernetes)
+- `GET /health` - Vérification de santé de l'API
 - `GET /api/todos` - Récupérer tous les todos
 - `POST /api/todos` - Créer un nouveau todo
 - `GET /api/todos/{id}` - Récupérer un todo spécifique
 - `PUT /api/todos/{id}` - Mettre à jour un todo
 - `DELETE /api/todos/{id}` - Supprimer un todo
-- `GET /health` - Vérification de santé de l'API
 
 ## 📊 Variables d'environnement
 
@@ -87,6 +88,8 @@ PORT=8080
 ### Frontend (React)
 ```env
 REACT_APP_API_URL=http://localhost:8080/api
+API_HOST=api                    # Hostname du service API (pour nginx proxy)
+API_PORT=8080                   # Port du service API (pour nginx proxy)
 ```
 
 ## 🏗️ Build des images Docker
@@ -183,3 +186,55 @@ docker-compose up --build -d
 docker-compose down -v
 docker-compose up -d
 ```
+
+## ☸️ Déploiement Kubernetes
+
+Des manifests Kubernetes d'exemple sont disponibles dans le dossier `k8s/`.
+
+### Configuration des variables d'environnement
+
+Pour Kubernetes, assurez-vous de configurer les bonnes variables d'environnement :
+
+**API Deployment:**
+- Les health checks utilisent maintenant la route `/` au lieu de `/health`
+- Liveness probe: `GET /` sur le port 8080
+- Readiness probe: `GET /health` sur le port 8080
+
+**Frontend Deployment:**
+- `API_HOST`: nom du service Kubernetes de l'API (ex: `todo-api-service`)
+- `API_PORT`: port du service API (généralement `8080`)
+- `REACT_APP_API_URL`: URL complète de l'API pour les requêtes côté client
+
+### Déploiement
+
+```bash
+# Déployer l'API
+kubectl apply -f k8s/api-deployment.yaml
+
+# Déployer le frontend
+kubectl apply -f k8s/frontend-deployment.yaml
+
+# Vérifier le statut
+kubectl get pods,services
+```
+
+### Health Checks
+
+L'application est maintenant compatible avec les health checks Kubernetes :
+- **Liveness probe**: `GET /` (nouveau)
+- **Readiness probe**: `GET /health` 
+- **Frontend**: `GET /` (nginx serve le React app)
+
+## 🛠️ Configuration nginx dynamique
+
+Le frontend utilise un système de template pour la configuration nginx qui permet de configurer dynamiquement l'upstream de l'API via des variables d'environnement.
+
+**Fichiers de configuration:**
+- `nginx.conf.template` - Template avec variables d'environnement `${API_HOST}` et `${API_PORT}`
+- `docker-entrypoint.sh` - Script qui substitue les variables et démarre nginx
+
+**Variables d'environnement pour la configuration nginx:**
+- `API_HOST` - Hostname du service API (défaut: `api`)
+- `API_PORT` - Port du service API (défaut: `8080`)
+
+Au démarrage du conteneur, le script `docker-entrypoint.sh` génère automatiquement `/etc/nginx/nginx.conf` à partir du template.

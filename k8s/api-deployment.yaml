@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-api
+  labels:
+    app: todo-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-api
+  template:
+    metadata:
+      labels:
+        app: todo-api
+    spec:
+      containers:
+      - name: api
+        image: todo-api:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_PATH
+          value: "/root/data/todos.db"
+        - name: PORT
+          value: "8080"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        volumeMounts:
+        - name: api-data
+          mountPath: /root/data
+      volumes:
+      - name: api-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-api-service
+  labels:
+    app: todo-api
+spec:
+  selector:
+    app: todo-api
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP

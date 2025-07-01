@@ -18,14 +18,21 @@ RUN npm run build
 # Stage 2: Serve the application with nginx (force AMD64)
 FROM --platform=linux/amd64 nginx:alpine
 
+# Install gettext for envsubst
+RUN apk add --no-cache gettext
+
 # Copy the build output to nginx html directory
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy nginx configuration template and startup script
+COPY nginx.conf.template /etc/nginx/nginx.conf.template
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+
+# Make the startup script executable
+RUN chmod +x /docker-entrypoint.sh
 
 # Expose port 80
 EXPOSE 80
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Use our custom entrypoint
+ENTRYPOINT ["/docker-entrypoint.sh"]
